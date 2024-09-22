@@ -20,7 +20,16 @@
 *
 */
 
-#include <WinSock2.h>
+#include <algorithm>    // std::min
+#include <cstring>      // std::memcpy, std::memset
+#include <string>       // std::string
+
+#ifdef _WIN32
+#	include <WinSock2.h>    // htonl, htons, ntohl, ntohs
+#else
+#	include <arpa/inet.h>   // htonl, htons, ntohl, ntohs
+#endif
+
 #include "EncDec.h"
 
 using namespace strongridbase;
@@ -84,7 +93,7 @@ double EncDec::get_Double( char* data, int* offset )
 std::string EncDec::get_String( char* data, int strLen, int* offset )
 {
 	char* tmp = new char[strLen+1];
-	memcpy(tmp,data+*offset,strLen);
+	std::memcpy(tmp,data+*offset,strLen);
 	tmp[strLen] = 0; // force zero terminator
 	*offset += strLen;
 	std::string output(tmp);
@@ -142,9 +151,9 @@ void EncDec::put_Double( char* data, double val, int* offset )
 
 void EncDec::put_String( char* data, std::string val, int maxLength, int* offset )
 {
-	memset(data+*offset, 0, maxLength);
-	int adjLen = __min(maxLength,val.length());
-	memcpy(data+*offset,val.c_str(),adjLen);
+	std::memset(data+*offset, 0, maxLength);
+	int adjLen = std::min(maxLength,int(val.length()));
+	std::memcpy(data+*offset,val.c_str(),adjLen);
 	*offset += maxLength;
 }
 

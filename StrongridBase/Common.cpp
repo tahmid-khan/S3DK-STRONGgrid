@@ -20,20 +20,20 @@
 *
 */
 
-#include <Windows.h>
+#ifdef _WIN32
+#	include <Windows.h>
+#endif
 #include "common.h"
-#include <time.h>
+#include <ctime>        // std::gmtime, std::mktime, std::time_t, std::tm
 
 using namespace strongridbase;
 
-tm TimeConversionHelper::SecondsSinceEpochToDateTime(uint64_t SecondsSinceEpoch)
+std::tm TimeConversionHelper::SecondsSinceEpochToDateTime(uint64_t SecondsSinceEpoch)
 {
-	tm blah;
-	gmtime_s(&blah, (time_t*)&SecondsSinceEpoch);
-	return blah;
+	return *std::gmtime(reinterpret_cast<std::time_t*>(&SecondsSinceEpoch));
 }
 
-uint32_t TimeConversionHelper::GetSocByDateTime(const tm* tms)
+uint32_t TimeConversionHelper::GetSocByDateTime(const std::tm* tms)
 {
-	return mktime((tm*)tms);
+	return std::mktime(const_cast<std::tm*>(tms));
 }
