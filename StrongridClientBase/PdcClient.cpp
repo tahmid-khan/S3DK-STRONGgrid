@@ -20,9 +20,13 @@
 *
 */
 
-#include <process.h>
 #include <iostream>
-#include <Windows.h>
+
+#ifdef _WIN32
+#	include <process.h>
+#	include <Windows.h>
+#endif
+
 #include "PdcClient.h"
 #include "../StrongridBase/common.h"
 #include "../StrongridBase/C37118Protocol.h";

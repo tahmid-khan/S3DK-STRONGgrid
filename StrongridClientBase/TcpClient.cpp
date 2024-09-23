@@ -20,9 +20,22 @@
 *
 */
 
-#include <WinSock2.h>
-#include <ws2tcpip.h>
-#include <sstream>
+#include <cstring>      // std::memset
+#include <sstream>      // std::stringstream
+
+#ifdef _WIN32
+#	include <winerror.h>    // WSAETIMEDOUT
+#	include <WinSock2.h>    // WSAGetLastError, SOCK_STREAM, SOL_SOCKET, SO_RCVTIMEO, connect, recv, send, setsockopt, socket, closesocket
+#	include <ws2def.h>      // AF_UNSPEC, addrinfo
+#	include <WS2tcpip.h>    // freeaddrinfo, getaddrinfo
+#else
+#	include <cerrno>        // EAGAIN, EWOULDBLOCK, errno
+#	include <netdb.h>       // addrinfo, freeaddrinfo, getaddrinfo
+#	include <sys/socket.h>  // AF_UNSPEC, SOCK_STREAM, SOL_SOCKET, SO_RCVTIMEO, connect, recv, send, setsockopt, socket
+#	include <unistd.h>      // close
+#	define closesocket  close
+#endif // _WIN32
+
 #include "../StrongridBase/common.h"
 #include "TcpClient.h"
 
@@ -55,7 +68,7 @@ void TcpClient::Connect()
     int rv;
 
 
-    memset(&hints, 0, sizeof hints);
+    std::memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
 
@@ -117,15 +130,27 @@ int TcpClient::Recv( char* refData, int length, int timeoutMs )
 	int bytesReceived = 0;
 	while( bytesReceived < length )
 	{
+
 		// set timeout
+#ifdef _WIN32
 		DWORD dwto = timeoutMs;
 		setsockopt(m_sockfd,SOL_SOCKET, SO_RCVTIMEO , (const char*)&dwto, sizeof(DWORD) );
+#else
+		timeval timeout {timeoutMs/1000, timeoutMs%1000 * 1000};  // millisec -> {sec, usec}
+		setsockopt(m_sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+#endif // _WIN32
 
 		// Perform read
 		int retVal = recv(m_sockfd, refData + bytesReceived, length - bytesReceived, 0 );
 		if( retVal <= 0 )
 		{
-			if( WSAGetLastError() == WSAETIMEDOUT ) throw SocketTimeout("Unable to read within timeout");
+
+#ifdef _WIN32
+			if( WSAGetLastError() == WSAETIMEDOUT )
+#else
+			if (errno == EAGAIN || errno == EWOULDBLOCK)
+#endif // _WIN32
+				throw SocketTimeout("Unable to read within timeout");
 			else {
 				Close();
 				throw SocketException("An error ocurred while attempting to read data");
@@ -144,6 +169,7 @@ void TcpClient::InitializeWindowsSocket()
 	if( m_win32Initialized == true ) return;
 	m_win32Initialized = true;
 
+#ifdef _WIN32	// no need to initialize on Unix
 	// Initialize window32 socket
 	 WSADATA wsaData;
 
@@ -151,4 +177,5 @@ void TcpClient::InitializeWindowsSocket()
         fprintf(stderr, "WSAStartup failed.\n");
 		throw Exception("Unable to initialize winsock2!");
     }
+#endif // _WIN32
 }
