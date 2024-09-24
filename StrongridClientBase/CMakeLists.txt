@@ -9,3 +9,4 @@ set (lib_StrongridClientBase_HDRS
 )
 
 add_library(StrongridClientBase STATIC ${lib_StrongridClientBase_SRCS} ${lib_StrongridClientBase_HDRS})
+target_link_libraries(StrongridClientBase StrongridBase)
