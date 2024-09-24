@@ -624,7 +624,6 @@ int main(int argc, char *argv[])
 			worker = std::thread(pdcThreadProc_Ver3, &config);
 		else
 			throw Exception("Invalid config - Version must be either 1 or 2");
-		worker.join();
 
 
 		// Close program
@@ -632,6 +631,7 @@ int main(int argc, char *argv[])
 		cout << "\nShutting down..";
 		SHUTDOWN_FLAG = true; // signal shutdown to PDC worker threads
 
+		worker.detach();
 		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 	}
 	catch( Exception e )
