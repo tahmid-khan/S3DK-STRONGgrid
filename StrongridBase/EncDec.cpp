@@ -25,6 +25,7 @@
 #include <string>       // std::string
 
 #ifdef _WIN32
+#	define NOMINMAX
 #	include <WinSock2.h>    // htonl, htons, ntohl, ntohs
 #else
 #	include <arpa/inet.h>   // htonl, htons, ntohl, ntohs

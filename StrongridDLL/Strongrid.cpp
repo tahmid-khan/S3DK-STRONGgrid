@@ -30,6 +30,7 @@
 #include <vector>
 
 #ifdef _WIN32
+#	define NOMINMAX
 #	include <WinSock2.h>    // POLLERR, POLLHUP, POLLIN, POLLRDNORM, WSAPoll, WSAPOLLFD
 #else
 #	include <poll.h>        // POLLERR, POLLHUP, POLLIN, POLLRDNORM, poll, pollfd
@@ -296,7 +297,7 @@ STRONGRIDIEEEC37118DLL_API int pollPdcWithDataWaiting( int pseudoPdcIdArrayLengt
 		// Copy data from result to output arrray
 		for( int i = 0; i < readsockVec.size() && i < pseudoPdcIdArrayLength; ++i )
 			outPseudoPdcIdArr[i] = readsockVec[i];
-		*outNumPdcWithData = std::min(readsockVec.size(),std::size_t(pseudoPdcIdArrayLength));
+		*outNumPdcWithData = std::min(int(readsockVec.size()),pseudoPdcIdArrayLength);
 		return RETERR_OK;
 	}
 	catch( Exception e )
