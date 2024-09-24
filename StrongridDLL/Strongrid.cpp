@@ -25,7 +25,8 @@
 #include <math.h>
 #include <stdint.h>
 #include "Strongrid.h"
-#include <string.h>
+#include <algorithm>
+#include <cstring>
 #include <iostream>
 #include <vector>
 #include <map>
@@ -43,6 +44,7 @@ static const int RETERR_INVALID_INPUT_PHASOR_ARR = 3;
 static const int RETERR_INVALID_INPUT_ANALOG_ARR = 4;
 static const int RETERR_INVALID_INPUT_DIGITAL_ARR = 5;
 
+constexpr std::size_t MAX_NAME_LEN = 255;
 static std::mutex s_clientMapLock;
 const int MAXIMUM_CONCURRENT_CLIENTS = 8192;
 static int s_pdcClientCursor = 0;
@@ -306,7 +308,7 @@ STRONGRIDIEEEC37118DLL_API int __cdecl pollPdcWithDataWaiting( int pseudoPdcIdAr
 		// Copy data from result to output arrray
 		for( int i = 0; i < readsockVec.size() && i < pseudoPdcIdArrayLength; ++i )
 			outPseudoPdcIdArr[i] = readsockVec[i];
-		*outNumPdcWithData = min(readsockVec.size(),pseudoPdcIdArrayLength);
+		*outNumPdcWithData = std::min(readsockVec.size(),std::size_t(pseudoPdcIdArrayLength));
 		return RETERR_OK;
 	}
 	catch( Exception e )
@@ -396,7 +398,7 @@ STRONGRIDIEEEC37118DLL_API int getPmuConfiguration(pmuConfig* pmuconf, int32_t p
 
 		pmuconf->pmuid = pmuCfg.IdCode;
 		memset(pmuconf->stationname, 0, 256);
-		strncpy(pmuconf->stationname, pmuCfg.StationName.c_str(), min(pmuCfg.StationName.length(), 255) );
+		strncpy(pmuconf->stationname, pmuCfg.StationName.c_str(), std::min(pmuCfg.StationName.length(), MAX_NAME_LEN) );
 		pmuconf->nominalFrequency = pmuCfg.NomFreqCode.GetAsFrequency();
 		pmuconf->numberOfPhasors = pmuCfg.phasorChnNames.size();
 		pmuconf->numberOfAnalog = pmuCfg.analogChnNames.size();
@@ -420,7 +422,7 @@ STRONGRIDIEEEC37118DLL_API int getPmuConfiguration_Ver3(pmuConfig_Ver3* pmuconf,
 
 		pmuconf->pmuid = pmuCfg.IdCode;
 		memset(pmuconf->stationname, 0, 256);
-		strncpy(pmuconf->stationname, pmuCfg.StationName.c_str(), min(pmuCfg.StationName.length(), 255) );
+		strncpy(pmuconf->stationname, pmuCfg.StationName.c_str(), std::min(pmuCfg.StationName.length(), MAX_NAME_LEN) );
 		pmuconf->nominalFrequency = pmuCfg.NomFreqCode.GetAsFrequency();
 		pmuconf->numberOfPhasors = pmuCfg.phasorChnNames.size();
 		pmuconf->numberOfAnalog = pmuCfg.analogChnNames.size();
@@ -455,7 +457,7 @@ STRONGRIDIEEEC37118DLL_API int getPhasorConfig( phasorConfig* phasorCfg, int32_t
 		const C37118PhasorUnit& phUnit = pmuCfg.PhasorUnit[phasorIndex];
 
 		memset( phasorCfg->name, 0, 256 );
-		strncpy(phasorCfg->name, pmuCfg.phasorChnNames[phasorIndex].c_str(), min(pmuCfg.phasorChnNames[phasorIndex].length(), 255) );
+		strncpy(phasorCfg->name, pmuCfg.phasorChnNames[phasorIndex].c_str(), std::min(pmuCfg.phasorChnNames[phasorIndex].length(), MAX_NAME_LEN) );
 		phasorCfg->type = phUnit.Type;
 		phasorCfg->format = 0;
 		phasorCfg->dataIsScaled = pmuCfg.DataFormat.Bit1_0xPhasorsIsInt_1xPhasorFloat == 1; // if "float" => data is scaled
@@ -479,7 +481,7 @@ STRONGRIDIEEEC37118DLL_API int getPhasorConfig_Ver3( phasorConfig_Ver3* phasorCf
 		const C37118PhasorScale_Ver3& phUnit = pmuCfg.PhasorScales[phasorIndex];
 
 		memset( phasorCfg->name, 0, 256 );
-		strncpy(phasorCfg->name, pmuCfg.phasorChnNames[phasorIndex].c_str(), min(pmuCfg.phasorChnNames[phasorIndex].length(), 255) );
+		strncpy(phasorCfg->name, pmuCfg.phasorChnNames[phasorIndex].c_str(), std::min(pmuCfg.phasorChnNames[phasorIndex].length(), MAX_NAME_LEN) );
 		phasorCfg->type = phUnit.VoltOrCurrent;
 		phasorCfg->format = 0;
 		phasorCfg->dataIsScaled = pmuCfg.DataFormat.Bit1_0xPhasorsIsInt_1xPhasorFloat == 1; // if "float" => data is scaled
@@ -504,7 +506,7 @@ STRONGRIDIEEEC37118DLL_API int getAnalogConfig( analogConfig *analogCfg, int32_t
 		const C37118AnalogUnit& angUnit = pmuCfg.AnalogUnit[analogIndex];
 
 		memset(analogCfg->name, 0, 256);
-		strncpy(analogCfg->name, pmuCfg.analogChnNames[analogIndex].c_str(), min(pmuCfg.analogChnNames[analogIndex].length(), 255) );
+		strncpy(analogCfg->name, pmuCfg.analogChnNames[analogIndex].c_str(), std::min(pmuCfg.analogChnNames[analogIndex].length(), MAX_NAME_LEN) );
 		analogCfg->Type = angUnit.Type_X;
 		analogCfg->dataIsScaled = false;
 		analogCfg->userdefined_scalar = angUnit.AnalogScalar;
@@ -527,7 +529,7 @@ STRONGRIDIEEEC37118DLL_API int getAnalogConfig_Ver3( analogConfig_Ver3 *analogCf
 		const C37118AnalogScale_Ver3& angScale = pmuCfg.AnalogScales[analogIndex];
 
 		memset(analogCfg->name, 0, 256);
-		strncpy(analogCfg->name, pmuCfg.analogChnNames[analogIndex].c_str(), min(pmuCfg.analogChnNames[analogIndex].length(), 255) );
+		strncpy(analogCfg->name, pmuCfg.analogChnNames[analogIndex].c_str(), std::min(pmuCfg.analogChnNames[analogIndex].length(), MAX_NAME_LEN) );
 		analogCfg->dataIsScaled = false;
 		analogCfg->scaling_magnitude = angScale.Scale;
 		analogCfg->scaling_offset = angScale.Offset;
@@ -552,7 +554,7 @@ STRONGRIDIEEEC37118DLL_API int getDigitalConfig(  digitalConfig* digitalCfg, int
 		const C37118DigitalUnit& digUnit = pmuCfg.DigitalUnit[unitWordIdx];
 
 		memset(digitalCfg->name, 0, 256);
-		strncpy(digitalCfg->name, pmuCfg.digitalChnNames[digitalIndex].c_str(), min(pmuCfg.digitalChnNames[digitalIndex].length(), 255) );
+		strncpy(digitalCfg->name, pmuCfg.digitalChnNames[digitalIndex].c_str(), std::min(pmuCfg.digitalChnNames[digitalIndex].length(), MAX_NAME_LEN) );
 
 		bool normBit, validBit;
 		digUnit.BitAtIdx(digitalIndex % 16, &normBit, &validBit);
@@ -578,7 +580,7 @@ STRONGRIDIEEEC37118DLL_API int getDigitalConfig_Ver3(  digitalConfig* digitalCfg
 		const C37118DigitalUnit& digUnit = pmuCfg.DigitalUnits[unitWordIdx];
 
 		memset(digitalCfg->name, 0, 256);
-		strncpy(digitalCfg->name, pmuCfg.digitalChnNames[digitalIndex].c_str(), min(pmuCfg.digitalChnNames[digitalIndex].length(), 255) );
+		strncpy(digitalCfg->name, pmuCfg.digitalChnNames[digitalIndex].c_str(), std::min(pmuCfg.digitalChnNames[digitalIndex].length(), MAX_NAME_LEN) );
 
 		bool normBit, validBit;
 		digUnit.BitAtIdx(digitalIndex % 16, &normBit, &validBit);
@@ -672,7 +674,7 @@ STRONGRIDIEEEC37118DLL_API int getHeaderMsg( char* msg, int maxMsgLength, int32_
 		const C37118PdcHeaderFrame& hdr = s_pdcClientMap[pseudoPdcId]->GetPdcHeaderFrame();
 
 		memset(msg, 0, maxMsgLength);
-		strncpy(msg, hdr.HeaderMessage.c_str(), min(maxMsgLength, hdr.HeaderMessage.length()));	msg[maxMsgLength - 1] = 0;
+		strncpy(msg, hdr.HeaderMessage.c_str(), std::min(std::size_t(maxMsgLength), hdr.HeaderMessage.length()));	msg[maxMsgLength - 1] = 0;
 		return RETERR_OK;
 	}
 	catch( ... )
