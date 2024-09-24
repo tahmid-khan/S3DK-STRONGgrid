@@ -29,13 +29,12 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <mutex>
 #include "../StrongridClientBase/PdcClient.h"
 #include "../StrongridBase/common.h"
-#include "Mutex.h"
 
 using namespace std;
 using namespace strongridclientbase;
-using namespace stronggriddll;
 
 static const int RETERR_OK = 0;
 static const int RETERR_UNKNOWN_ERR = 1;
@@ -44,7 +43,7 @@ static const int RETERR_INVALID_INPUT_PHASOR_ARR = 3;
 static const int RETERR_INVALID_INPUT_ANALOG_ARR = 4;
 static const int RETERR_INVALID_INPUT_DIGITAL_ARR = 5;
 
-static Mutex s_clientMapLock;
+static std::mutex s_clientMapLock;
 const int MAXIMUM_CONCURRENT_CLIENTS = 8192;
 static int s_pdcClientCursor = 0;
 static PdcClient* s_pdcClientMap[MAXIMUM_CONCURRENT_CLIENTS]; // maps: index -> PdcClient* [0 => no client]
@@ -89,7 +88,7 @@ STRONGRIDIEEEC37118DLL_API int connectPdc( char *ipAddress,  int32_t port, int32
 		return RETERR_UNKNOWN_ERR;
 	}
 
-	MutexFragment mux(&s_clientMapLock);
+	s_clientMapLock.lock();
 	{
 		// Find the first available slot in the map
 		while( true )
@@ -106,7 +105,7 @@ STRONGRIDIEEEC37118DLL_API int connectPdc( char *ipAddress,  int32_t port, int32
 		// Add to socket-listener vector
 		s_socketPollVector.push_back(std::pair<int,int>(s_pdcClientCursor,client->GetSocketDescriptor()));
 	}
-	mux.Finalize();
+	s_clientMapLock.unlock();
 
 	return RETERR_OK;
 }
@@ -120,7 +119,7 @@ STRONGRIDIEEEC37118DLL_API int disconnectPdc(int32_t pseudoPdcId)
 {
 	if( PseudoPdcIdIsValidClient(pseudoPdcId) == false) return RETERR_UNKNOWN_ERR;
 	try {
-		MutexFragment mux(&s_clientMapLock);
+		s_clientMapLock.lock();
 		{
 			// Drop from 'socket listener' vector
 			std::vector<std::pair<int,int>>::iterator iterErase;
@@ -133,7 +132,7 @@ STRONGRIDIEEEC37118DLL_API int disconnectPdc(int32_t pseudoPdcId)
 			delete s_pdcClientMap[pseudoPdcId];
 			s_pdcClientMap[pseudoPdcId] = 0;
 		}
-		mux.Finalize();
+		s_clientMapLock.unlock();
 		return RETERR_OK;
 	}
 	catch( SocketTimeout )
@@ -268,7 +267,7 @@ STRONGRIDIEEEC37118DLL_API int dllshutdown(void)
 std::vector<int> CheckPortsForDataToRead(int  timeoutMs)
 {
 	// Copy the data into a temporary array to avoid blocking too long
-	MutexFragment mux(&s_clientMapLock);
+	s_clientMapLock.lock();
 	const int arrayLength = s_socketPollVector.size();
 	WSAPOLLFD* socketListenArray = new WSAPOLLFD[arrayLength];
 	int* pseudoPdcIdArr = new int[arrayLength];
@@ -278,7 +277,7 @@ std::vector<int> CheckPortsForDataToRead(int  timeoutMs)
 		socketListenArray[i].events = POLLIN;
 		pseudoPdcIdArr[i] = s_socketPollVector[i].first;
 	}
-	mux.Finalize();
+	s_clientMapLock.unlock();
 
 	// Poll for data
 	int ret = WSAPoll(socketListenArray, arrayLength, timeoutMs);

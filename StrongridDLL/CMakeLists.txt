@@ -1,10 +1,8 @@
 set (lib_StrongridDLL_SRCS
-./Mutex.cpp
 ./Strongrid.cpp
 )
 
 set (lib_StrongridDLL_HDRS
-./Mutex.h
 ./Strongrid.h
 )
 
