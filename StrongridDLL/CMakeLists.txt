@@ -6,7 +6,7 @@ set (lib_StrongridDLL_HDRS
 ./Strongrid.h
 )
 
-add_library (StrongridDLL SHARED ${lib_StrongridDLL_SRCS} ${lib_StrongridDLL_HDRS})
+add_library (StrongridDLL STATIC ${lib_StrongridDLL_SRCS} ${lib_StrongridDLL_HDRS})
 
 target_link_libraries(StrongridDLL StrongridBase StrongridClientBase)
 

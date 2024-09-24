@@ -58,31 +58,12 @@ static int s_pdcClientCursor = 0;
 static PdcClient* s_pdcClientMap[MAXIMUM_CONCURRENT_CLIENTS]; // maps: index -> PdcClient* [0 => no client]
 static std::vector<std::pair<int,int>> s_socketPollVector; // Maps: pseudopdcid, socket FD | only contains active clients
 
-BOOL APIENTRY DllMain( HANDLE hModule,
-					  DWORD  msg,
-					  LPVOID lpReserved)
+
+STRONGRIDIEEEC37118DLL_API void strongrid_library_init()
 {
-	switch (msg)
-	{
-	case DLL_PROCESS_ATTACH:
-		memset(s_pdcClientMap, 0, sizeof(PdcClient*) ); // set all to 0
-		break;
-
-	case DLL_THREAD_ATTACH: break;
-	case DLL_THREAD_DETACH: break;
-
-	case DLL_PROCESS_DETACH:
-
-		break;
-	}
-	return TRUE;
+	memset(s_pdcClientMap, 0, sizeof(PdcClient*) ); // set all to 0
 }
 
-
-STRONGRIDIEEEC37118DLL_API int init(void)
-{
-	return RETERR_OK;
-}
 
 STRONGRIDIEEEC37118DLL_API int connectPdc( char *ipAddress,  int32_t port, int32_t pdcId, int32_t* pseudoPdcId )
 {
@@ -154,7 +135,7 @@ STRONGRIDIEEEC37118DLL_API int disconnectPdc(int32_t pseudoPdcId)
 	}
 }
 
-STRONGRIDIEEEC37118DLL_API int __cdecl readHeaderData( int32_t timeout, int32_t pseudoPdcId)
+STRONGRIDIEEEC37118DLL_API int readHeaderData( int32_t timeout, int32_t pseudoPdcId)
 {
 	if( PseudoPdcIdIsValidClient(pseudoPdcId) == false) return RETERR_UNKNOWN_ERR;
 
@@ -172,7 +153,7 @@ STRONGRIDIEEEC37118DLL_API int __cdecl readHeaderData( int32_t timeout, int32_t 
 	}
 }
 
-STRONGRIDIEEEC37118DLL_API int __cdecl readConfiguration(  int32_t timeout, int32_t pseudoPdcId)
+STRONGRIDIEEEC37118DLL_API int readConfiguration(  int32_t timeout, int32_t pseudoPdcId)
 {
 	if( PseudoPdcIdIsValidClient(pseudoPdcId) == false) return RETERR_UNKNOWN_ERR;
 
@@ -190,7 +171,7 @@ STRONGRIDIEEEC37118DLL_API int __cdecl readConfiguration(  int32_t timeout, int3
 	}
 }
 
-STRONGRIDIEEEC37118DLL_API int __cdecl readConfiguration_Ver3(  int32_t timeout, int32_t pseudoPdcId)
+STRONGRIDIEEEC37118DLL_API int readConfiguration_Ver3(  int32_t timeout, int32_t pseudoPdcId)
 {
 	if( PseudoPdcIdIsValidClient(pseudoPdcId) == false) return RETERR_UNKNOWN_ERR;
 
@@ -254,7 +235,7 @@ STRONGRIDIEEEC37118DLL_API int readNextFrame(int32_t timeOut, int32_t pseudoPdcI
 	}
 }
 
-STRONGRIDIEEEC37118DLL_API int dllshutdown(void)
+STRONGRIDIEEEC37118DLL_API int strongrid_library_cleanup()
 {
 	try {
 		// Traverse the entire clientmap and shutdown/delete every non-null entry
@@ -306,7 +287,7 @@ std::vector<int> CheckPortsForDataToRead(int  timeoutMs)
 	return output;
 }
 
-STRONGRIDIEEEC37118DLL_API int __cdecl pollPdcWithDataWaiting( int pseudoPdcIdArrayLength, int32_t* outPseudoPdcIdArr, int32_t* outNumPdcWithData, int pollTimeoutMs )
+STRONGRIDIEEEC37118DLL_API int pollPdcWithDataWaiting( int pseudoPdcIdArrayLength, int32_t* outPseudoPdcIdArr, int32_t* outNumPdcWithData, int pollTimeoutMs )
 {
 	try {
 		// Get a list of all sockets available for reading
@@ -694,7 +675,7 @@ STRONGRIDIEEEC37118DLL_API int getHeaderMsg( char* msg, int maxMsgLength, int32_
 // ------------- LABVIEW SPECIFIC FUNCTIONS / NO ARRAYS WITHIN STRUCTURES
 // ------------------------------------------------------------------------------------------------------------------------------------
 
-STRONGRIDIEEEC37118DLL_API int __cdecl getPmuRealDataLabview(noArraysPmuDataFrame* rd, PmuStatus* rdsts,
+STRONGRIDIEEEC37118DLL_API int getPmuRealDataLabview(noArraysPmuDataFrame* rd, PmuStatus* rdsts,
 															uint16_t PhasorArrayLength, float* phasorValueReal, float* phasorValueImaginary,
 															uint16_t AnalogArrayLength, float* analogValueArr,
 															uint16_t DigitalArrayLength, uint8_t* digitalValueArr,
@@ -750,7 +731,7 @@ STRONGRIDIEEEC37118DLL_API int __cdecl getPmuRealDataLabview(noArraysPmuDataFram
 	}
 }
 
-STRONGRIDIEEEC37118DLL_API int __cdecl getPmuConfigurationLabview(noArraysPmuConfig* pmuconf, char* stationName, int32_t pseudoPdcId, int32_t pmuIndex)
+STRONGRIDIEEEC37118DLL_API int getPmuConfigurationLabview(noArraysPmuConfig* pmuconf, char* stationName, int32_t pseudoPdcId, int32_t pmuIndex)
 {
 	pmuConfig tmpConfig; tmpConfig.stationname = stationName;
 	int retval = getPmuConfiguration(&tmpConfig, pseudoPdcId, pmuIndex);
@@ -764,7 +745,7 @@ STRONGRIDIEEEC37118DLL_API int __cdecl getPmuConfigurationLabview(noArraysPmuCon
 	return retval;
 }
 
-STRONGRIDIEEEC37118DLL_API int __cdecl getPhasorConfigLabview(noArraysPhasorConfig *phasorCfg, char* name, int32_t pseudoPdcId, int32_t pmuIndex, int32_t phasorIndex)
+STRONGRIDIEEEC37118DLL_API int getPhasorConfigLabview(noArraysPhasorConfig *phasorCfg, char* name, int32_t pseudoPdcId, int32_t pmuIndex, int32_t phasorIndex)
 {
 	phasorConfig tmpCfg; tmpCfg.name = name;
 	int retval = getPhasorConfig(&tmpCfg, pseudoPdcId, pmuIndex, phasorIndex);
@@ -777,7 +758,7 @@ STRONGRIDIEEEC37118DLL_API int __cdecl getPhasorConfigLabview(noArraysPhasorConf
 	return retval;
 }
 
-STRONGRIDIEEEC37118DLL_API int __cdecl getAnalogConfigLabview(noArraysAnalogConfig *analogCfg, char* name, int32_t pseudoPdcId, int32_t pmuIndex, int32_t analogIndex)
+STRONGRIDIEEEC37118DLL_API int getAnalogConfigLabview(noArraysAnalogConfig *analogCfg, char* name, int32_t pseudoPdcId, int32_t pmuIndex, int32_t analogIndex)
 {
 	analogConfig tmpCfg; tmpCfg.name = name;
 	int retval = getAnalogConfig(&tmpCfg, pseudoPdcId, pmuIndex, analogIndex);
@@ -789,7 +770,7 @@ STRONGRIDIEEEC37118DLL_API int __cdecl getAnalogConfigLabview(noArraysAnalogConf
 	return retval;
 }
 
-STRONGRIDIEEEC37118DLL_API int __cdecl getDigitalConfigLabview(noArraysDigitalConfig* digitalCfg, char* name, int32_t pseudoPdcId, int32_t pmuIndex, int32_t digitalIndex )
+STRONGRIDIEEEC37118DLL_API int getDigitalConfigLabview(noArraysDigitalConfig* digitalCfg, char* name, int32_t pseudoPdcId, int32_t pmuIndex, int32_t digitalIndex )
 {
 	digitalConfig tmpCfg; tmpCfg.name = name;
 	int retval = getDigitalConfig(&tmpCfg, pseudoPdcId, pmuIndex, digitalIndex);

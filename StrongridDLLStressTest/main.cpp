@@ -259,6 +259,7 @@ void ReadFrameLoopProc(int pseudoPdcId, ostream& strout, const std::vector<PmuSt
 void pdcThreadProc_Ver3(PdcConfig* pdccfgraw)
 {
 	PdcConfig pdc = *pdccfgraw;
+	strongrid_library_init();
 
 	while( SHUTDOWN_FLAG == false )
 	{
@@ -424,11 +425,14 @@ void pdcThreadProc_Ver3(PdcConfig* pdccfgraw)
 			printf("An unknown error has ocurred");
 		}
 	}
+
+	strongrid_library_cleanup();
 }
 
 void pdcThreadProc(PdcConfig* pdccfgraw)
 {
 	PdcConfig pdc = *pdccfgraw;
+	strongrid_library_init();
 
 	while( SHUTDOWN_FLAG == false )
 	{
@@ -591,6 +595,7 @@ void pdcThreadProc(PdcConfig* pdccfgraw)
 		}
 	}
 
+	strongrid_library_cleanup();
 }
 
 int main(int argc, char *argv[])
