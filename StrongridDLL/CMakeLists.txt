@@ -10,6 +10,6 @@ add_library (StrongridDLL SHARED ${lib_StrongridDLL_SRCS} ${lib_StrongridDLL_HDR
 
 target_link_libraries(StrongridDLL StrongridBase StrongridClientBase)
 
-#if(WIN32)
+if(WIN32)
   target_link_libraries(StrongridDLL ws2_32)
-#endif()
+endif()

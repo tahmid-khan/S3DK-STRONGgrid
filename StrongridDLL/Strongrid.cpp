@@ -20,17 +20,24 @@
 *
 */
 
-#include <winsock2.h>
-#include <Windows.h>
-#include <math.h>
-#include <stdint.h>
-#include "Strongrid.h"
 #include <algorithm>
+#include <cmath>
+#include <cstdint>
 #include <cstring>
 #include <iostream>
-#include <vector>
 #include <map>
 #include <mutex>
+#include <vector>
+
+#ifdef _WIN32
+#	include <WinSock2.h>    // POLLERR, POLLHUP, POLLIN, POLLRDNORM, WSAPoll, WSAPOLLFD
+#else
+#	include <poll.h>        // POLLERR, POLLHUP, POLLIN, POLLRDNORM, poll, pollfd
+#	define WSAPoll   poll
+#	define WSAPOLLFD pollfd
+#endif
+
+#include "Strongrid.h"
 #include "../StrongridClientBase/PdcClient.h"
 #include "../StrongridBase/common.h"
 
