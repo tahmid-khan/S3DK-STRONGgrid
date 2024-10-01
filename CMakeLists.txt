@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1)
+# `Threads::Threads` and `THREADS_PREFER_PTHREAD_FLAG` were introduced in 3.1
 
 project(StrongridDLL)
 
@@ -18,6 +19,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 add_subdirectory(StrongridBase)
 add_subdirectory(StrongridClientBase)
 add_subdirectory(StrongridDLL)
+
 
 if(BUILD_EXAMPLE)
 	add_subdirectory(StrongridDLLStressTest)
